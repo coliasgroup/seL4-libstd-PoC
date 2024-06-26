@@ -1,5 +1,5 @@
 { lib
-, symlinkJoin
+, runCommandNoCC
 }:
 
 self: super: with self; {
@@ -14,6 +14,42 @@ self: super: with self; {
     crates = callPackage ./crates.nix {};
   };
 
+  patchToolchainSrc = toolchain: src:
+    let
+    in
+      runCommandNoCC "${toolchain.name}-patched" {} ''
+        mkdir -p $out/bin $out/lib $out/lib/rustlib/src
+
+        for f in $(find ${toolchain}/bin -type f -mindepth 1 -maxdepth 1 -printf '%P\n'); do
+          install ${toolchain}/bin/$f $out/bin
+
+          if [ $f != rustfmt ]; then
+            continue
+          fi
+
+          if isELF $out/bin/$f; then
+            patchelf --set-rpath $out/lib $out/bin/$f || true
+          fi
+        done
+
+        for file in $(find ${toolchain}/lib -name 'librustc_driver-*'); do
+          install $file $out/lib
+        done
+
+        ln -s ${src} $out/lib/rustlib/src/rust
+
+        for d in . $(find $out -type d -printf '%P\n'); do
+          if [ -d ${toolchain}/$d ]; then
+            for entry in $(find ${toolchain}/$d -mindepth 1 -maxdepth 1 -printf '%P\n'); do
+              if [ ! -e $out/$d/$entry ]; then
+                ln -s ${toolchain}/$d/$entry $out/$d
+              fi
+            done
+          fi
+        done
+      ''
+    ;
+
   patched = rec {
     src = ../../../rust;
 
@@ -25,34 +61,7 @@ self: super: with self; {
     };
 
     rustEnvironment = here.rustEnvironment.override (old: {
-      rustToolchain = symlinkJoin {
-        name = "patched-toolchain";
-        paths = [ old.rustToolchain ];
-        postBuild =
-          let
-            d = "lib/rustlib/src/rust";
-          in ''
-            for file in $(find $out/bin -xtype f -maxdepth 1); do
-              install -m755 $(realpath "$file") $out/bin
-
-              if [[ $file =~ /rustfmt$ ]]; then
-                continue
-              fi
-
-              if isELF "$file"; then
-                patchelf --set-rpath $out/lib "$file" || true
-              fi
-            done
-
-            for file in $(find $out/lib -name "librustc_driver-*"); do
-              install $(realpath "$file") "$file"
-            done
-
-            cd $out
-            rm -r ${d}
-            ln -s ${filteredSrc} ${d}
-          '';
-      };
+      rustToolchain = patchToolchainSrc old.rustToolchain filteredSrc;
     });
   };
 
