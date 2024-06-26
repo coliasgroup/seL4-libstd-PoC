@@ -13,6 +13,7 @@ self: super: with self;
         rootCrate = here.crates.test;
         release = false;
         replaceSysroot = args: buildSysroot (args // {
+          std = true;
           src = here.rustSrc;
         });
       };
@@ -20,6 +21,14 @@ self: super: with self;
   };
 
   sh = shell.overrideAttrs (attrs: {
-    __CARGO_TESTS_ONLY_SRC_ROOT = here.rustSrc;
+    __CARGO_TESTS_ONLY_SRC_ROOT = toString ../../../../rust;
+    shellHook = attrs.shellHook + ''
+      hs='${
+        lib.concatStringsSep " " [
+            "-Z" "build-std=core,alloc,unwind,std,compiler_builtins"
+            "-Z" "build-std-features=compiler-builtins-mem"
+          ]
+      }'
+    '';
   });
 }

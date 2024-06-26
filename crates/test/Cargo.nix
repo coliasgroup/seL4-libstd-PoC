@@ -5,7 +5,10 @@ mk {
   dependencies = {
     inherit (localCrates)
       sel4
-      sel4-root-task
     ;
+    sel4-root-task = localCrates.sel4-root-task // {
+      default-features = false;
+      features = [ "std" ];
+    };
   };
 }

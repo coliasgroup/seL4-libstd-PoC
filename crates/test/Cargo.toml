@@ -5,4 +5,8 @@ edition = "2021"
 
 [dependencies]
 sel4 = { path = "../../rust-sel4/crates/sel4" }
-sel4-root-task = { path = "../../rust-sel4/crates/sel4-root-task" }
+
+[dependencies.sel4-root-task]
+path = "../../rust-sel4/crates/sel4-root-task"
+default-features = false
+features = ["std"]

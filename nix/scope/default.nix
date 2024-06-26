@@ -15,18 +15,29 @@ self: super: with self; {
 
     crates = callPackage ./crates.nix {};
 
-    rustSrc =
+    rustSrcRaw =
       let
-        unfiltered = ../../../rust;
+        # useLocal = true;
+        useLocal = false;
+        rev = "b8eab835a6030ca12a2e846f3706391bf6a8be0d";
       in
-        lib.cleanSourceWith rec {
-          src = unfiltered;
-          filter = name: type:
-            lib.hasPrefix "${toString src}/library" name
-            || name == "${toString src}/Cargo.toml"
-            || name == "${toString src}/Cargo.lock"
-          ;
+        if useLocal
+        then ../../../rust
+        else builtins.fetchGit {
+          url = "https://github.com/coliasgroup/rust.git";
+          ref = sources.mkKeepRef rev;
+          inherit rev;
+          submodules = true;
         };
+
+    rustSrc = lib.cleanSourceWith rec {
+      src = rustSrcRaw;
+      filter = name: type:
+        lib.hasPrefix "${toString src}/library" name
+        || name == "${toString src}/Cargo.toml"
+        || name == "${toString src}/Cargo.lock"
+      ;
+    };
 
     sysroot = buildSysroot {
       inherit (here) rustEnvironment;

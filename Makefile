@@ -1,6 +1,10 @@
 .PHONY: none
 none:
 
+.PHONY: clean
+clean:
+	rm -rf target
+
 .PHONY: update-manifests
 update-manifests:
 	$(MAKE) -C hacking/cargo-manifest-management update
