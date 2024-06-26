@@ -96,8 +96,27 @@ self: super: with self; {
         rm -r $out/lib/rustlib/src/rust
         cp -r ${src} $out/lib/rustlib/src/rust
       '';
+      a = runCommandNoCC "${toolchain.name}-patched" {} ''
+        cp -r --no-preserve=owner ${toolchain} $out
+
+        for f in $(find $out/bin -type f -maxdepth 1); do
+          if [[ $f =~ /rustfmt$ ]]; then
+            continue
+          fi
+
+          if isELF $f; then
+            chmod -R +w $f
+            patchelf --set-rpath $out/lib $f || true
+          fi
+        done
+
+        chmod -R +w $out/lib/rustlib/src
+        rm -r $out/lib/rustlib/src/rust
+        cp -r ${src} $out/lib/rustlib/src/rust
+      '';
     in
-      z
+      # z
+      a
     ;
 
   patched = rec {
@@ -118,7 +137,7 @@ self: super: with self; {
   sysroot = buildSysroot {
     inherit (patched) rustEnvironment;
     release = false;
-    # std = true;
+    std = true;
   };
 
   nativeTest = buildCratesInLayers {
