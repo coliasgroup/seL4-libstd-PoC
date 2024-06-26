@@ -1,7 +1,12 @@
+[patch.crates-io.ring]
+git = "https://github.com/coliasgroup/ring.git"
+rev = "c5880ee6ae56bb684f5bb2499f1c05cef8943745"
+
 [workspace]
 default-members = []
 resolver = "2"
 members = [
+    "crates/native-test",
     "crates/test",
     "rust-sel4/crates/drivers/bcm2835-aux-uart",
     "rust-sel4/crates/drivers/pl011",

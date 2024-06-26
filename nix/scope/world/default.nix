@@ -1,19 +1,19 @@
 { lib
+, buildSysroot
 , here
+, patched
 }:
 
 self: super: with self;
 
 {
-  mkTaskHere = mkTask.override {
-    inherit (here) defaultRustEnvironment buildCratesInLayers;
-  };
-
   testSystem = callPlatform {
     system = mkSystem {
-      rootTask = mkTaskHere {
+      rootTask = mkTask {
+        inherit (patched) rustEnvironment;
         rootCrate = here.crates.test;
         release = false;
+        # replaceSysroot = args: buildSysroot args;
       };
     };
   };

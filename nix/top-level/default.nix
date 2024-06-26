@@ -27,4 +27,6 @@ in {
 
         ${py}/bin/python3 ${../../test.py} ${simulate}
       '';
+
+  inherit (pkgs.build.this) nativeTest;
 }
