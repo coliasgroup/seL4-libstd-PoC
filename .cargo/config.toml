@@ -1,0 +1,5 @@
+[unstable]
+unstable-options = true
+
+[env]
+RUST_TARGET_PATH = { value = "rust-sel4/support/targets", relative = true }
