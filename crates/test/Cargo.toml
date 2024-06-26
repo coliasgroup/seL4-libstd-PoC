@@ -1,0 +1,8 @@
+[package]
+name = "test"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sel4 = { path = "../../rust-sel4/crates/sel4" }
+sel4-root-task = { path = "../../rust-sel4/crates/sel4-root-task" }
